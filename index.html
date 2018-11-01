@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>spelling game</title>
+<style>
+* {padding: 0; margin: 0;}
+canvas { background: #eee; display: block; margin: 0 auto; }
+h1 { font-family:arial;text-align:center; margin: 100px 100px; }
+</style>
+    </head>
+    <body>
+        <h1>A spelling game</h1>
+        <canvas id="myCanvas" width="640" height="320"></canvas>
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        canvas.addEventListener('click', on_click);
+        var x = canvas.width /2;
+        var y = canvas.height/2;
+        var dx = -2;
+        var dy = -2;
+        var text = "";
+        var clicked = false;
+        var click_x = 0;
+        var click_y = 0;
+        var score = 0;
+        var high_score = 0;
+        var in_a_row = 0;
+        var seconds = 0;
+        var frame = 0;
+        var words = [];
+        var right_spelling = "";
+        var paused = false;
+        var word_list = [
+["accident", "accidant", "axident"],
+["accommodate", "acomodate", "accomodate"],
+["accompany", "accommpany", "acompany"],
+["according", "acording", "accorrding"], 
+["achieve", "acheive", "acheve"],
+["aggressive", "agresive", "aggresive"], 
+["amateur", "amatere", "amature"],
+["ancient", "anchent", "anceint"],
+["apparent", "aparent", "apparrent"],
+["appreciate", "aprecieate", "aprreciate"], 
+["attached", "atached", "attashed"],
+["available", "availble", "avabile"],
+["average", "avridge", "averege"],
+["awkward", "auckward", "arkword"],
+["bargain", "bargin", "barguin"],
+["bruise","broose", "bruse"],
+["category", "categree", "catgory"],
+["cemetery", "cemetree", "cemetary"],
+["committee", "comitee", "commitiee"], 
+["communicate", "comunicate", "commuincit"], 
+["community", "comunitty", "communitie"], 
+["competition", "competion", "comptitian"], 
+["conscience", "conshience", "concsiense"], 
+["conscious", "conshious", "conscius"], 
+["controversy", "contriversy", "contreversary"], 
+["convenience", "conveenince", "convenence"],
+["correspond", "coresponde", "corrispond"],
+["criticise", "critisize", "critasize"],
+["curiosity", "curosity", "curiocity"],
+["definite", "definate", "definit"],
+["determined", "determned", "detremiend"],
+["develop", "develope", "develup"],
+["desperate", "desperite", "desperat"], 
+["dictionary", "dictionery", "dictshunary"], 
+["disastrous", "disasterous", "disastruss"],
+["embarrass", "embaras", "embarress"], 
+["environment", "envirunment", "envireroment"],
+["equip", "equipe", "eckwip"],
+["especially", "espeshially", "especerally"],
+["exaggerate", "exagerate", "exaggarate"],
+["excellent", "exallent", "exerlent"],
+["exercise", "exersize", "exercies"],
+["existence", "existance", "excistence"],
+["explanation", "explation", "explnation"],
+["familiar", "fammilier", "familliar"],
+["foreign", "forin", "foriegn"],
+["forty", "fortie", "forghty"],
+["frequently", ], 
+["government"], 
+["group", "gorup", "groop"],
+["guarantee"],
+["guide", "giide", "giued"],
+["harass"],
+["hindrance"],
+["identity"], 
+["immediate"],
+["individual"],
+["interfere"],
+["interrupt"],
+["language"],
+["leisure"],
+["lightning"],
+["marvellous"],
+["mischievous"],
+["muscle"],
+["necessary"],
+["neighbour"],
+["nuisance"],
+["occupy"],
+["occur"],
+["opportunity"], 
+["parliament", "parliment", "parlement"],
+["persuade"], 
+["physical"], 
+["potatoes", "potaytos", "potatos"],
+["prejudice"],
+["privilege"],
+["profession"],
+["programme"],
+["pronunciation", "pronuncation", "pronounication"],
+["queue"],
+["recognise"],
+["recommend", "reccomend", "reccommend"],
+["relevant"],
+["restaurant"],
+["rhyme"],
+["rhythm", "rythm", "rhythym"],
+["sacrifice", "scarifice", "sacriface"],
+["secretary"],
+["shoulder"],
+["signature"],
+["sincere"],
+["soldier", "soldger", "sholder"],
+["stomach"],
+["sufficient", "sufficent", "suficcent"],
+["suggest"],
+["symbol"],
+["system"],
+["temperature"],
+["thorough"],
+["twelfth"],
+["variety"],
+["vegetable"],
+["vehicle", "veichle", "veichal"],
+["woman", "wooman", "wuman"],
+["yacht"],
+  
+            
+        ];
+        function on_click(event) {
+            var x = event.pageX - canvas.offsetLeft;
+            var y = event.pageY - canvas.offsetTop;
+            text = x.toString() + " " + y.toString();
+            clicked = true;
+            click_x = x;
+            click_y = y;
+        }
+        function draw_rect(x, y, w, h, f) {
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.fillStyle = f;
+            ctx.fill();
+            ctx.closePath();
+        }
+        function draw_text(x, y, str, fill) {
+            ctx.font = "30px Arial";
+            ctx.fillStyle = fill;
+            ctx.fillText(str, x, y);
+        }
+        function update_ball() {
+            x += dx;
+            y += dy;
+            if (x > canvas.width || x < 0) { dx = -dx; }
+            if (y > canvas.height || y < 0) { dy = -dy; }
+        }
+
+        function pick_word() {
+            var index = Math.floor(Math.random() * word_list.length);
+            words = word_list[index].slice();
+            right_spelling = words[0];
+            // scramble
+            for(var i = 0; i < 4; i++) {
+                var a = Math.floor(Math.random() * words.length);
+                var b = Math.floor(Math.random() * words.length);
+                var t = words[a];
+                words[a] = words[b];
+                words[b] = t;
+            }
+        }
+
+        function draw() {
+            
+            if (clicked) {
+                clicked = false;
+                if (!paused && click_x > canvas.width - 40 &&
+                    click_y < 40) {
+                    paused = true;
+                } else {
+                    paused = false;
+                    var f = Math.floor(click_x * 3.0 / canvas.width);
+                    var correct = (words[f] == right_spelling);
+                    var colour = "#ff000088";
+                    if (correct) {
+                        colour = "#00ff0088";
+                        score += 10;
+                        in_a_row += 1;
+                        if (in_a_row == 4) {
+                            in_a_row = 0;
+                            draw_text(canvas.width - 200, 30,
+                                "four in a row!", "#ff0000");
+                            score += 100;
+                        }
+                        pick_word();
+                    } else {
+                        score -= 5;
+                        in_a_row = 0;
+                    }
+                    draw_rect(f * canvas.width / 3, 0,
+                        canvas.width / 3, canvas.height, colour);
+                }
+            }
+            if (paused) {
+                return;
+            }
+            frame ++;
+            update_ball();
+
+            if (frame % 10 == 0) {
+                var d = new Date();
+                if (d.getSeconds() != seconds) {
+                    score = score -1;
+                    seconds = d.getSeconds();
+                }
+            }
+            if (score < 0) {
+                score = 0;
+            }
+            if (score > high_score) {
+                high_score = score;
+            }
+            draw_rect(0, 0, canvas.width, canvas.height, "#ffffff11");
+            draw_rect(x - 10, y - 10, 20, 20, "#ff0000");
+            for (var i = 0; i < 3; i++) {
+                draw_text(10 + i * canvas.width/3,
+                    canvas.height / 2, words[i], "#888888");
+            }
+            draw_text(10, 30, "score " + score.toString(), "#444488");
+            draw_text(10, canvas.height - 10,
+                "high score " + high_score.toString(), "#448844");
+            draw_text(canvas.width - 40, 10, "||", "#0000ff");
+        }
+        pick_word();
+        setInterval(draw, 10);
+    </script>
+    </body>
+</html>
+

@@ -27,6 +27,7 @@ h1 { font-family:arial;text-align:center; margin: 100px 100px; }
         var score = 0;
         var high_score = 0;
         var in_a_row = 0;
+        var ten_in_a_row_count_down = 0;
         var seconds = 0;
         var frame = 0;
         var words = [];
@@ -162,6 +163,11 @@ h1 { font-family:arial;text-align:center; margin: 100px 100px; }
             ctx.fillStyle = fill;
             ctx.fillText(str, x, y);
         }
+        function draw_text_big(str) {
+            ctx.font = "60px Arial";
+            ctx.fillStyle = "#ff00ff";
+            ctx.fillText(str, 50, canvas.height/2);
+        }
         function update_ball() {
             x += dx;
             y += dy;
@@ -184,7 +190,12 @@ h1 { font-family:arial;text-align:center; margin: 100px 100px; }
         }
 
         function draw() {
-            
+            var four_in_a_row = false;
+            var click_rect = {
+                clicked : false,
+                index: 0,
+                colour: ""
+            };
             if (clicked) {
                 clicked = false;
                 if (!paused && click_x > canvas.width - 40 &&
@@ -194,31 +205,32 @@ h1 { font-family:arial;text-align:center; margin: 100px 100px; }
                     paused = false;
                     var f = Math.floor(click_x * 3.0 / canvas.width);
                     var correct = (words[f] == right_spelling);
-                    var colour = "#ff000088";
+                    click_rect.clicked = true;
+                    click_rect.index = f;
+                    click_rect.colour = "#ff000088";
                     if (correct) {
-                        colour = "#00ff0088";
+                        click_rect.colour = "#00ff0088";
                         score += 10;
                         in_a_row += 1;
-                        if (in_a_row == 4) {
-                            in_a_row = 0;
-                            draw_text(canvas.width - 200, 30,
-                                "four in a row!", "#ff0000");
+                        if (in_a_row % 4 == 0) {
                             score += 100;
+                            four_in_a_row = true;
+                        }
+                        if (in_a_row % 10 == 0) {
+                            ten_in_a_row_count_down = 100;
+                            score += 1000;
                         }
                         pick_word();
                     } else {
                         score -= 5;
                         in_a_row = 0;
                     }
-                    draw_rect(f * canvas.width / 3, 0,
-                        canvas.width / 3, canvas.height, colour);
                 }
             }
             if (paused) {
                 return;
             }
             frame ++;
-            update_ball();
 
             if (frame % 10 == 0) {
                 var d = new Date();
@@ -234,6 +246,29 @@ h1 { font-family:arial;text-align:center; margin: 100px 100px; }
                 high_score = score;
             }
             draw_rect(0, 0, canvas.width, canvas.height, "#ffffff11");
+            update_ball();
+
+            if (four_in_a_row) {
+                draw_text(canvas.width - 200, 30,
+                    "four in a row!", "#ff0000");
+            }
+
+            if (ten_in_a_row_count_down > 0) {
+                ten_in_a_row_count_down -= 1;
+                draw_text_big("!!   TEN IN A ROW   !!");
+                for (var i = 0; i < 10; i++) {
+                    draw_rect(Math.random() * canvas.width,
+                        Math.random() * canvas.height,
+                        20, 20, "#ff00ff");
+                }
+                return;
+            }
+
+            if (click_rect.clicked != false) {
+                draw_rect(click_rect.index * canvas.width / 3, 0,
+                    canvas.width / 3, canvas.height, click_rect.colour);
+            }
+
             draw_rect(x - 10, y - 10, 20, 20, "#ff0000");
             for (var i = 0; i < 3; i++) {
                 draw_text(10 + i * canvas.width/3,
